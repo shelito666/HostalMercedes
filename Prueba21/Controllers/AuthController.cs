@@ -17,34 +17,40 @@ namespace Prueba21.Controllers
             _authService = authService;
         }
 
-        public IActionResult Login()
+        // GET: /Auth/Login?role=Cliente|Administrador
+        [AllowAnonymous]
+        public IActionResult Login(string? role = null, string? returnUrl = null)
         {
+            ViewBag.Role = role;          // para mostrar/propagar el rol seleccionado en la Landing
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
+        // POST: /Auth/Login
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string contrasenia)
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(string email, string contrasenia, string? role, string? returnUrl)
         {
-           var usuario = await _authService.ValidarUsuario(email, contrasenia);
+            var usuario = await _authService.ValidarUsuario(email, contrasenia);
 
             if (usuario == null)
             {
                 ModelState.AddModelError("Error", "Usuario o contraseña incorrectos.");
+                ViewBag.Role = role; // conservar selección
                 return View();
             }
-            
+
+            // Construir claims (incluye el rol real del usuario)
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, usuario.Email.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Nombre),
                 new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(ClaimTypes.Role, usuario.Rol)
+                new Claim(ClaimTypes.Role, usuario.Rol)  // "Administrador" o "Cliente"
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true
-            };
+            var authProperties = new AuthenticationProperties { IsPersistent = true };
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
@@ -52,9 +58,26 @@ namespace Prueba21.Controllers
                 authProperties
             );
 
-            return RedirectToAction("Index", "Home");
-        }
+            // 1) Si vino el rol desde la Landing, redirige según esa intención
+            if (!string.IsNullOrEmpty(role))
+            {
+                if (role == "Administrador")
+                    return RedirectToAction("Index", "Home");
 
+                if (role == "Cliente")
+                    return RedirectToAction("Index", "ClienteHome");
+            }
+
+            // 2) Si no vino role, decide por el rol REAL del usuario
+            if (usuario.Rol == "Administrador" || User.IsInRole("Administrador"))
+                return RedirectToAction("Index", "Home");
+
+            if (usuario.Rol == "Cliente" || User.IsInRole("Cliente"))
+                return RedirectToAction("Index", "ClienteHome");
+
+            // 3) Fallback
+            return RedirectToAction("Index", "Landing");
+        }
 
         [Authorize]
         public async Task<IActionResult> Logout()

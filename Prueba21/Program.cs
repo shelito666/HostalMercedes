@@ -50,10 +50,10 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+// ?? Cambia la ruta por defecto a Landing/Index
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}")
+    pattern: "{controller=Landing}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

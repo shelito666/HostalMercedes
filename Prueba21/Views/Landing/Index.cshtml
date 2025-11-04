@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Bienvenido";
+    Layout = "_Layout"; // o el layout que ya usas
+}
+
+<div class="container py-5 text-center">
+    <h1 class="display-5 fw-bold mb-2">Hostal Mercedes</h1>
+    <p class="text-muted mb-4">Elige tu tipo de acceso</p>
+
+    <div class="row justify-content-center g-4">
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-0 shadow h-100">
+                <div class="card-body">
+                    <h3 class="mb-3">Administrador</h3>
+                    <p class="mb-4">Gestiona reservas, hospedajes y personal.</p>
+                    <a class="btn btn-primary btn-lg w-100"
+                       href="@Url.Action("Login","Auth", new { role = "Administrador" })">
+                        Soy Administrador
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-0 shadow h-100">
+                <div class="card-body">
+                    <h3 class="mb-3">Cliente</h3>
+                    <p class="mb-4">Crea y revisa tus reservas.</p>
+                    <a class="btn btn-success btn-lg w-100"
+                       href="@Url.Action("Login","Auth", new { role = "Cliente" })">
+                        Soy Cliente
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
